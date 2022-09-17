@@ -1,0 +1,47 @@
+import requests as rq
+import json as js
+import datetime
+
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36'
+
+}
+
+
+def getLeftDay(value):
+    today = datetime.date.today()
+    oneday = datetime.timedelta(days=value)
+    yesterday = today - oneday
+    return yesterday
+
+
+def getPictures(value):
+    url = "https://cn.bing.com/HPImageArchive.aspx?format=js&n=8&mkt=zh-CN&idx=" + str(value)
+    print(url)
+    response = rq.get(url, headers=headers)
+    obj = js.loads(response.text)
+    dic = {}
+    for i in range(8):
+        _url = 'https://cn.bing.com' + obj['images'][i]['url'].split('&')[0]
+        name2 = '.' + _url.split('.')[-1]
+        name1 = '_' + obj['images'][i]['copyright'].split('(©')[0].strip().split('，')[0]
+        # 原来错误我是路径太长了
+        # https://stackoverflow.com/questions/17392568/python-error-oserror-errno-22-invalid-argument
+        # name0 = time.strftime("%Y-%m-%d", time.localtime())
+        name0 = str(getLeftDay(value))
+        dic[name0 + name1 + name2] = _url
+    for key in dic.keys():
+        path = "C:\\bgground\\" + key
+        print(path)
+        with open(path, 'wb') as f:
+            res = rq.get(dic[key], headers=headers)
+            f.write(res.content)
+
+
+onlyToday = True
+if __name__ == '__main__':
+    if onlyToday:
+        getPictures(0)
+    else:
+        for i in range(8):
+            getPictures(i)
